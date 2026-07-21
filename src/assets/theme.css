@@ -1,0 +1,183 @@
+/* ============================================================================
+   Design tokens — palette data-viz validée (light + dark).
+   Le thème suit l'OS ; l'attribut data-theme sur <html> peut forcer un mode.
+   ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces & plans */
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f2f1ec;
+  --border: rgba(11, 11, 11, 0.1);
+  --border-strong: #e1e0d9;
+
+  /* Encres */
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-muted: #898781;
+
+  /* Statuts (fixes, jamais thémés) */
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --info: #2a78d6;
+
+  /* Teintes douces pour les fonds de tuiles (dérivées, mode clair) */
+  --good-soft: #e4f5e4;
+  --warning-soft: #fdf0d6;
+  --serious-soft: #fbe7dd;
+  --critical-soft: #f8e0e0;
+  --info-soft: #e0ecfb;
+
+  --good-ink: #006300;
+  --warning-ink: #8a5a00;
+  --serious-ink: #a5451f;
+  --critical-ink: #a3201f;
+  --info-ink: #1c5cab;
+
+  /* Ombres */
+  --shadow-sm: 0 1px 2px rgba(11, 11, 11, 0.05);
+  --shadow-md: 0 4px 16px rgba(11, 11, 11, 0.08);
+  --shadow-lg: 0 12px 40px rgba(11, 11, 11, 0.12);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root[data-theme='dark'],
+html.dark {
+  color-scheme: dark;
+
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #242422;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: #2c2c2a;
+
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --ink-muted: #898781;
+
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --info: #3987e5;
+
+  --good-soft: rgba(12, 163, 12, 0.16);
+  --warning-soft: rgba(250, 178, 25, 0.16);
+  --serious-soft: rgba(236, 131, 90, 0.16);
+  --critical-soft: rgba(208, 59, 59, 0.16);
+  --info-soft: rgba(57, 135, 229, 0.16);
+
+  --good-ink: #4cc94c;
+  --warning-ink: #fab219;
+  --serious-ink: #f0a07f;
+  --critical-ink: #ef7a7a;
+  --info-ink: #7db3f0;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #242422;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: #2c2c2a;
+
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-muted: #898781;
+
+    --info: #3987e5;
+
+    --good-soft: rgba(12, 163, 12, 0.16);
+    --warning-soft: rgba(250, 178, 25, 0.16);
+    --serious-soft: rgba(236, 131, 90, 0.16);
+    --critical-soft: rgba(208, 59, 59, 0.16);
+    --info-soft: rgba(57, 135, 229, 0.16);
+
+    --good-ink: #4cc94c;
+    --warning-ink: #fab219;
+    --serious-ink: #f0a07f;
+    --critical-ink: #ef7a7a;
+    --info-ink: #7db3f0;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Reset léger */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--info-ink);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utilitaires de couleur par statut (fond doux + encre lisible) */
+.tone-good {
+  --tone: var(--good);
+  --tone-soft: var(--good-soft);
+  --tone-ink: var(--good-ink);
+}
+.tone-warning {
+  --tone: var(--warning);
+  --tone-soft: var(--warning-soft);
+  --tone-ink: var(--warning-ink);
+}
+.tone-critical {
+  --tone: var(--critical);
+  --tone-soft: var(--critical-soft);
+  --tone-ink: var(--critical-ink);
+}
+.tone-serious {
+  --tone: var(--serious);
+  --tone-soft: var(--serious-soft);
+  --tone-ink: var(--serious-ink);
+}
+.tone-info {
+  --tone: var(--info);
+  --tone-soft: var(--info-soft);
+  --tone-ink: var(--info-ink);
+}
