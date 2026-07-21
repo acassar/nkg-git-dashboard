@@ -22,13 +22,34 @@ le front interroge directement l'API REST GitLab v4.
 
 ```bash
 npm install
-cp .env.example .env      # renseigne au moins VITE_GITLAB_URL
+cp .env.example .env      # renseigne au moins VITE_GITLAB_URL, VITE_GITLAB_TOKEN et une cible
 npm run dev
 ```
 
-Puis ouvre l'URL affichée. Au premier lancement, le panneau **Réglages**
-s'ouvre : URL, token et cibles peuvent aussi être saisis directement dans
-l'interface (stockés en `localStorage`).
+### Configuration par fichier `.env` (recommandé)
+
+Renseigne les variables dans `.env` — elles sont **prioritaires** et pilotent
+le dashboard sans passer par l'interface :
+
+```dotenv
+VITE_GITLAB_URL=https://gitlab.mon-entreprise.com
+VITE_GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
+VITE_GITLAB_GROUPS=mon-groupe/mon-equipe
+# VITE_GITLAB_PROJECTS=mon-groupe/un-projet-precis
+```
+
+Au démarrage, si l'URL + le token + au moins une cible sont présents, le
+dashboard charge les données automatiquement. Les champs définis dans `.env`
+apparaissent **verrouillés** (🔒) dans le panneau Réglages.
+
+> `.env` est relu à chaque rechargement de la page — modifie le fichier puis
+> recharge. Redémarre `npm run dev` si Vite ne recharge pas les variables.
+
+### Configuration par l'interface (alternative)
+
+Les variables laissées **vides** dans `.env` restent modifiables dans le
+panneau **Réglages** (bouton en haut à droite), avec un bouton « Tester la
+connexion ». Ces valeurs sont alors stockées dans le `localStorage`.
 
 Scripts : `npm run dev` · `npm run build` · `npm run preview` · `npm run type-check`.
 

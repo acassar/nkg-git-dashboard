@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { GitLabClient, GitLabApiError } from '@/services/gitlabApi'
 
 const emit = defineEmits<{ close: []; saved: [] }>()
 const config = useConfigStore()
+
+const anyEnvLock = computed(() => Object.values(config.envLock).some(Boolean))
 
 // Copies locales éditées puis appliquées au store à l'enregistrement.
 const url = ref(config.url)
@@ -63,35 +65,62 @@ function save() {
       </header>
 
       <div class="modal__body">
+        <p v-if="anyEnvLock" class="env-note">
+          🔒 Certaines valeurs proviennent du fichier <code>.env</code> et sont
+          prioritaires (verrouillées ici). Modifie-les dans le fichier, puis recharge.
+        </p>
+
         <label class="field">
-          <span class="field__label">URL de l'instance GitLab</span>
-          <input v-model="url" type="url" placeholder="https://gitlab.mon-entreprise.com" />
+          <span class="field__label">
+            URL de l'instance GitLab
+            <span v-if="config.envLock.url" class="lock">.env</span>
+          </span>
+          <input
+            v-model="url"
+            type="url"
+            placeholder="https://gitlab.mon-entreprise.com"
+            :disabled="config.envLock.url"
+          />
         </label>
 
         <label class="field">
           <span class="field__label">
             Access Token
-            <span class="hint">scope <code>read_api</code></span>
+            <span v-if="config.envLock.token" class="lock">.env</span>
+            <span v-else class="hint">scope <code>read_api</code></span>
           </span>
-          <input v-model="token" type="password" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" />
+          <input
+            v-model="token"
+            type="password"
+            placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
+            :disabled="config.envLock.token"
+          />
         </label>
 
         <div class="row">
           <label class="field">
-            <span class="field__label">Groupes à monitorer</span>
+            <span class="field__label">
+              Groupes à monitorer
+              <span v-if="config.envLock.groups" class="lock">.env</span>
+            </span>
             <textarea
               v-model="groupsText"
               rows="3"
               placeholder="mon-groupe&#10;mon-groupe/sous-groupe"
+              :disabled="config.envLock.groups"
             ></textarea>
             <span class="hint">Un par ligne — chemin ou ID. Sous-groupes inclus.</span>
           </label>
           <label class="field">
-            <span class="field__label">Projets additionnels</span>
+            <span class="field__label">
+              Projets additionnels
+              <span v-if="config.envLock.projects" class="lock">.env</span>
+            </span>
             <textarea
               v-model="projectsText"
               rows="3"
               placeholder="mon-groupe/mon-projet"
+              :disabled="config.envLock.projects"
             ></textarea>
             <span class="hint">Un par ligne — chemin ou ID.</span>
           </label>
@@ -200,6 +229,35 @@ function save() {
   font-weight: 400;
   color: var(--ink-muted);
   font-size: 0.76rem;
+}
+.lock {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--info-soft);
+  color: var(--info-ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.lock::before {
+  content: '🔒 ';
+}
+.env-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--info-soft);
+  color: var(--info-ink);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.field input:disabled,
+.field textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 .field input,
 .field textarea {

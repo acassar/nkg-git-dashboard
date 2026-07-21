@@ -20,31 +20,44 @@ function splitEnvList(value: string | undefined): string[] {
     .filter(Boolean)
 }
 
+// Valeurs lues dans le fichier `.env` (variables VITE_GITLAB_*).
+const ENV = {
+  url: (import.meta.env.VITE_GITLAB_URL ?? '').trim(),
+  token: (import.meta.env.VITE_GITLAB_TOKEN ?? '').trim(),
+  groups: splitEnvList(import.meta.env.VITE_GITLAB_GROUPS),
+  projects: splitEnvList(import.meta.env.VITE_GITLAB_PROJECTS),
+}
+
+// Quels champs sont fournis (et donc verrouillés) par le `.env` ?
+const ENV_LOCK = {
+  url: ENV.url !== '',
+  token: ENV.token !== '',
+  groups: ENV.groups.length > 0,
+  projects: ENV.projects.length > 0,
+}
+
+/**
+ * Priorité : `.env` d'abord (config manuelle), puis `localStorage` (saisie via
+ * l'UI) pour les champs non définis dans l'env. Ainsi éditer le fichier `.env`
+ * est toujours pris en compte au rechargement.
+ */
 function loadInitial(): PersistedConfig {
-  const fromEnv: PersistedConfig = {
-    url: import.meta.env.VITE_GITLAB_URL ?? '',
-    token: import.meta.env.VITE_GITLAB_TOKEN ?? '',
-    groups: splitEnvList(import.meta.env.VITE_GITLAB_GROUPS),
-    projects: splitEnvList(import.meta.env.VITE_GITLAB_PROJECTS),
-    thresholds: { ...DEFAULT_THRESHOLDS },
+  let stored: Partial<PersistedConfig> = {}
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) stored = JSON.parse(raw) as Partial<PersistedConfig>
+  } catch {
+    // localStorage corrompu ou indisponible → on ignore.
   }
 
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<PersistedConfig>
-      return {
-        url: parsed.url || fromEnv.url,
-        token: parsed.token || fromEnv.token,
-        groups: parsed.groups?.length ? parsed.groups : fromEnv.groups,
-        projects: parsed.projects?.length ? parsed.projects : fromEnv.projects,
-        thresholds: { ...DEFAULT_THRESHOLDS, ...parsed.thresholds },
-      }
-    }
-  } catch {
-    // localStorage corrompu ou indisponible → on repart de l'env.
+  return {
+    url: ENV_LOCK.url ? ENV.url : (stored.url ?? ''),
+    token: ENV_LOCK.token ? ENV.token : (stored.token ?? ''),
+    groups: ENV_LOCK.groups ? ENV.groups : (stored.groups ?? []),
+    projects: ENV_LOCK.projects ? ENV.projects : (stored.projects ?? []),
+    // Les seuils ne sont pas dans l'env : localStorage sinon valeurs par défaut.
+    thresholds: { ...DEFAULT_THRESHOLDS, ...stored.thresholds },
   }
-  return fromEnv
 }
 
 export const useConfigStore = defineStore('config', () => {
@@ -56,10 +69,16 @@ export const useConfigStore = defineStore('config', () => {
   const projects = ref<string[]>(initial.projects)
   const thresholds = ref<AnalysisThresholds>(initial.thresholds)
 
+  // Exposé à l'UI pour signaler/verrouiller les champs pilotés par `.env`.
+  const envLock = ENV_LOCK
+  const configuredViaEnv = computed(
+    () => ENV_LOCK.url && ENV_LOCK.token && (ENV_LOCK.groups || ENV_LOCK.projects),
+  )
+
+  const hasTargets = computed(() => groups.value.length > 0 || projects.value.length > 0)
   const isConfigured = computed(
     () => url.value.trim() !== '' && token.value.trim() !== '' && hasTargets.value,
   )
-  const hasTargets = computed(() => groups.value.length > 0 || projects.value.length > 0)
 
   function persist() {
     const payload: PersistedConfig = {
@@ -81,10 +100,11 @@ export const useConfigStore = defineStore('config', () => {
 
   function reset() {
     localStorage.removeItem(STORAGE_KEY)
-    url.value = ''
-    token.value = ''
-    groups.value = []
-    projects.value = []
+    // On retombe sur l'env s'il est présent, sinon vide.
+    url.value = ENV.url
+    token.value = ENV.token
+    groups.value = [...ENV.groups]
+    projects.value = [...ENV.projects]
     thresholds.value = { ...DEFAULT_THRESHOLDS }
   }
 
@@ -94,6 +114,8 @@ export const useConfigStore = defineStore('config', () => {
     groups,
     projects,
     thresholds,
+    envLock,
+    configuredViaEnv,
     isConfigured,
     hasTargets,
     reset,
